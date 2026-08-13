@@ -10,16 +10,17 @@
     <main>
       <div class="title-row"><h1>采集投递草稿</h1><button id="open-settings" type="button">设置</button></div>
       <p id="feedback" role="status">正在读取当前页面…</p>
+      <button id="maintain-resume" class="resume" type="button">维护简历信息</button>
       <button id="ai-fill" class="ai" type="button">✨ AI 一键填写</button>
       <form id="capture-form">
         <div class="submit-mode"><label><input type="radio" name="entryMode" value="company-job" checked>企业＋岗位</label><label><input type="radio" name="entryMode" value="company-only">仅添加企业</label></div>
-        <fieldset id="job-fields">
+        <fieldset id="company-fields">
           <legend>企业父条目</legend>
           <label>企业名称<input name="companyName" required maxlength="120"></label>
           <label>企业简称<input name="companyShortName" maxlength="60"></label>
           <label>企业官网<input name="companyWebsite" type="url" maxlength="4096"></label>
         </fieldset>
-        <fieldset>
+        <fieldset id="job-fields">
           <legend>岗位子条目</legend>
           <label>岗位名称<input name="jobTitle" required maxlength="160"></label>
           <label>地点<input name="location" maxlength="100"></label>
