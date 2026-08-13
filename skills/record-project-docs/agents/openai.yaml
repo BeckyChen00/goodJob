@@ -1,0 +1,4 @@
+interface:
+  display_name: "项目文档记录"
+  short_description: "在全部测试通过后同步功能迭代记录以及项目技术交接文档"
+  default_prompt: "使用 $record-project-docs 在测试通过后更新项目文档。"
