@@ -1,15 +1,11 @@
 {
-    "manifest_version":  3,
-    "name":  "求职投递台采集器",
-    "version":  "0.1.0",
-    "description":  "采集企业与岗位草稿并保存到待同步队列。",
-    "permissions":  [
-                        "activeTab",
-                        "scripting",
-                        "storage"
-                    ],
-    "action":  {
-                   "default_popup":  "popup.html",
-                   "default_title":  "采集投递草稿"
-               }
+  "manifest_version": 3,
+  "name": "求职投递台采集器",
+  "version": "0.1.0",
+  "description": "采集企业与岗位草稿并保存到待同步队列。",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "采集投递草稿"
+  }
 }

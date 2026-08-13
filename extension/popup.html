@@ -1,1 +1,37 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>閲囬泦鎶曢€掕崏绋?/title><link rel="stylesheet" href="popup.css"></head><body><main><h1>閲囬泦鎶曢€掕崏绋?/h1><p id="feedback" role="status">姝ｅ湪璇诲彇褰撳墠椤甸潰鈥?/p><form id="capture-form"><fieldset><legend>浼佷笟鐖舵潯鐩?/legend><label>浼佷笟鍚嶇О<input name="companyName" required maxlength="120"></label><label>浼佷笟绠€绉?input name="companyShortName" maxlength="60"></label><label>浼佷笟瀹樼綉<input name="companyWebsite" type="url" maxlength="4096"></label></fieldset><fieldset><legend>宀椾綅瀛愭潯鐩?/legend><label>宀椾綅鍚嶇О<input name="jobTitle" required maxlength="160"></label><label>鍦扮偣<input name="location" maxlength="100"></label><label>鎵规<input name="batch" maxlength="100"></label><label>宀椾綅閾炬帴<input name="sourceUrl" type="url" maxlength="4096"></label><label>澶囨敞<textarea name="notes" maxlength="2000"></textarea></label></fieldset><button class="primary" type="submit">淇濆瓨寰呭悓姝ヨ崏绋?/button></form><section><h2>寰呭悓姝ラ槦鍒?/h2><ul id="queue"><li class="empty">姝ｅ湪璇诲彇鈥?/li></ul></section></main><script type="module" src="src/popup.js"></script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>采集投递草稿</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <h1>采集投递草稿</h1>
+      <p id="feedback" role="status">正在读取当前页面…</p>
+      <form id="capture-form">
+        <fieldset>
+          <legend>企业父条目</legend>
+          <label>企业名称<input name="companyName" required maxlength="120"></label>
+          <label>企业简称<input name="companyShortName" maxlength="60"></label>
+          <label>企业官网<input name="companyWebsite" type="url" maxlength="4096"></label>
+        </fieldset>
+        <fieldset>
+          <legend>岗位子条目</legend>
+          <label>岗位名称<input name="jobTitle" required maxlength="160"></label>
+          <label>地点<input name="location" maxlength="100"></label>
+          <label>批次<input name="batch" maxlength="100"></label>
+          <label>岗位链接<input name="sourceUrl" type="url" maxlength="4096"></label>
+          <label>备注<textarea name="notes" maxlength="2000"></textarea></label>
+        </fieldset>
+        <button class="primary" type="submit">保存待同步草稿</button>
+      </form>
+      <section>
+        <h2>待同步队列</h2>
+        <ul id="queue"><li class="empty">正在读取…</li></ul>
+      </section>
+    </main>
+    <script type="module" src="src/popup.js"></script>
+  </body>
+</html>
