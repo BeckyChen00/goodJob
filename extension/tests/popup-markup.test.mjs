@@ -14,17 +14,17 @@ async function assertAssets(root, label) {
 
   const html = await readFile(new URL("popup.html", root), "utf8");
   assert.ok(!damagedPatterns.some((pattern) => pattern.test(html)), `${label} popup has no damaged patterns`);
-  for (const id of ["capture-form", "feedback", "queue"]) {
+  for (const id of ["capture-form", "feedback", "queue", "ai-fill", "open-settings", "settings-dialog", "settings-form"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `${label} has #${id}`);
   }
-  for (const tag of ["title", "h1", "form", "fieldset", "label", "button", "section", "script"]) {
+  for (const tag of ["title", "h1", "form", "fieldset", "label", "button", "section", "script", "dialog", "select"]) {
     assert.equal(
       (html.match(new RegExp(`<${tag}\\b`, "gi")) ?? []).length,
       (html.match(new RegExp(`</${tag}>`, "gi")) ?? []).length,
       `${label} closes ${tag}`,
     );
   }
-  assert.equal((html.match(/<input\b/gi) ?? []).length, 7, `${label} has 7 inputs`);
+  assert.equal((html.match(/<input\b/gi) ?? []).length, 9, `${label} has 9 inputs`);
   assert.equal((html.match(/<textarea\b/gi) ?? []).length, 1, `${label} has 1 textarea`);
   assert.match(html, /<script\s+type=["']module["']\s+src=["']src\/popup\.js["']><\/script>/i, `${label} loads popup module`);
   assert.match(html, /<meta\s+charset=["']utf-8["']/i, `${label} declares UTF-8`);

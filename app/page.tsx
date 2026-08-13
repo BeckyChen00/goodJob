@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Company, Job, deleteCompany, deleteJob, exportData, importData, listCompanies, listJobs, saveCompany, saveJob } from "./storage";
 import { ApplicationsDashboard } from "./components/jobs/ApplicationsDashboard";
+import { companyFromExtension, jobFromExtension, parseExtensionDraft } from "./extension-bridge";
+import { findDuplicateCompany, findDuplicateJob } from "./data/duplicates";
 
 const industries = ["全部", "能源电力", "通信", "金融", "建筑基建", "军工/航天/核工业", "综合产业", "北京市属重点国企", "基建/重工", "互联网民营企业"];
 const ownerships = ["央企", "北京市属国企", "其他国企", "互联网民营企业", "其他民营企业"];
@@ -26,6 +28,25 @@ export default function Home() {
 
   async function refresh() { setCompanies(await listCompanies()); setJobs(await listJobs()); }
   useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    async function receive(event: MessageEvent) {
+      if (event.origin !== window.location.origin || event.data?.source !== "goodjob-extension" || event.data?.type !== "IMPORT_APPLICATION_DRAFT") return;
+      try {
+        const parsed = parseExtensionDraft(event.data.draft);
+        const currentCompanies = await listCompanies();
+        const candidate = companyFromExtension(parsed);
+        let company = findDuplicateCompany({ ...candidate, id: "candidate", createdAt: "", updatedAt: "" }, currentCompanies);
+        if (!company) { await saveCompany(candidate); company = findDuplicateCompany({ ...candidate, id: "candidate", createdAt: "", updatedAt: "" }, await listCompanies()); }
+        if (!company) throw new Error("企业写入失败");
+        const job = jobFromExtension(parsed, company.id);
+        const currentJobs = await listJobs();
+        if (!findDuplicateJob({ ...job, id: "candidate", createdAt: "", updatedAt: "" }, currentJobs)) await saveJob(job);
+        await refresh(); setExpanded(values => values.includes(company.id) ? values : [...values, company.id]); notify("插件草稿已添加");
+        window.postMessage({ source: "goodjob-app", type: "IMPORT_APPLICATION_RESULT", requestId: event.data.requestId, result: { delivered: true } }, window.location.origin);
+      } catch (error) { const message = error instanceof Error ? error.message : "插件草稿接收失败"; notify(message); window.postMessage({ source: "goodjob-app", type: "IMPORT_APPLICATION_RESULT", requestId: event.data.requestId, result: { delivered: false, message } }, window.location.origin); }
+    }
+    window.addEventListener("message", receive); return () => window.removeEventListener("message", receive);
+  }, []);
   function notify(message: string) { setToast(message); window.setTimeout(() => setToast(""), 2400); }
 
   const shown = useMemo(() => companies.filter(c => (ownership === "全部" || c.ownership === ownership) && (industry === "全部" || c.industry === industry) && `${c.name}${c.shortName}${c.description}`.toLowerCase().includes(query.toLowerCase())), [companies, ownership, industry, query]);
