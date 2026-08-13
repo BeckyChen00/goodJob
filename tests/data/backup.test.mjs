@@ -1,0 +1,7 @@
+import assert from"node:assert/strict";import test from"node:test";import{createBackup,importBackupAtomically,parseBackup}from"../../app/data/backup.ts";
+const c={id:"c1",name:"虚构科技",shortName:"虚构",ownership:"民营",industry:"软件",website:"https://example.test",recruitmentUrl:"",description:"",applicationLimit:null,deadline:"",notes:"",createdAt:"2026-01-01",updatedAt:"2026-01-01"};
+const j={id:"j1",companyId:"c1",title:"测试工程师",batch:"秋招",location:"北京",category:"技术",url:"https://jobs.example.test/1",jd:"",status:"待投递",appliedAt:"",deadline:"",progress:"",resumeName:"",notes:"",createdAt:"2026-01-01",updatedAt:"2026-01-01"};
+const valid=()=>createBackup([{...c}],[{...j}],"2026-01-02");
+test("valid v1 backup round-trips",()=>{const b=valid();assert.deepEqual(parseBackup(JSON.parse(JSON.stringify(b))),b)});
+for(const[name,mutate]of[["missing field",v=>{delete v.companies[0].name}],["wrong type",v=>{v.jobs[0].title=42}],["unknown version",v=>{v.version=2}],["orphan job",v=>{v.jobs[0].companyId="missing"}],["duplicate id",v=>{v.companies.push({...v.companies[0]})}],["extra field",v=>{v.jobs[0].extra=true}]])test(`rejects ${name} without replacement`,async()=>{const v=structuredClone(valid());mutate(v);let calls=0;await assert.rejects(importBackupAtomically(v,async()=>{calls++}),TypeError);assert.equal(calls,0)});
+test("validated import replaces once",async()=>{const v=valid(),seen=[];await importBackupAtomically(v,async b=>seen.push(b));assert.deepEqual(seen,[v])});
