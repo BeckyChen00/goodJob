@@ -1,0 +1,2 @@
+/* global chrome */
+chrome.runtime.onMessage.addListener((message,_sender,sendResponse)=>{if(message?.type!=='CAPTURE_PAGE_CONTEXT')return false;sendResponse({title:document.title||'',url:location.href});return false;});
