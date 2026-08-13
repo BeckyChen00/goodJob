@@ -1,5 +1,6 @@
 const CONTROL_SELECTOR = "input, select, textarea";
 const BLOCKED_TYPES = new Set(["file", "submit", "button", "reset", "image", "hidden"]);
+const OPTION_SELECTOR = '[role="option"], .el-select-dropdown__item, .ant-select-item-option, .ivu-select-item';
 const CAPTCHA_PATTERN = /captcha|验证码|校验码|人机验证/i;
 
 function text(value) {
@@ -28,10 +29,22 @@ function fieldType(control) {
   return text(control.type).toLowerCase() || "text";
 }
 
+function customControlInfo(control) {
+  const host = control.closest?.('[role="combobox"], .el-select, .el-date-editor, .el-radio-group, .el-checkbox-group, .ant-select, .ant-picker, .ivu-select, .ivu-date-picker');
+  const className = text(host?.className || control.className);
+  const role = text(control.getAttribute?.("role") || host?.getAttribute?.("role")).toLowerCase();
+  if (role === "combobox" || /(?:el-select|ant-select|ivu-select)/i.test(className)) return { kind: "custom-select", host: host || control };
+  if (/(?:date-editor|ant-picker|date-picker)/i.test(className)) return { kind: "custom-date", host: host || control };
+  if (/radio-group/i.test(className)) return { kind: "custom-radio", host: host || control };
+  if (/checkbox-group/i.test(className)) return { kind: "custom-checkbox", host: host || control };
+  return { kind: "", host: null };
+}
+
 function isBlocked(control, descriptor = {}) {
   const type = descriptor.type || fieldType(control);
   const clue = [descriptor.key, descriptor.label, control.name, control.id, control.getAttribute?.("aria-label")].join(" ");
-  return BLOCKED_TYPES.has(type) || CAPTCHA_PATTERN.test(clue) || control.disabled || control.readOnly;
+  const customKind = descriptor.customKind || customControlInfo(control).kind;
+  return BLOCKED_TYPES.has(type) || CAPTCHA_PATTERN.test(clue) || control.disabled || (control.readOnly && !customKind);
 }
 
 function keyCandidates(control, label) {
@@ -49,6 +62,7 @@ export function describeResumeField(control, index = 0) {
   const label = labelText(control);
   const candidates = keyCandidates(control, label);
   const type = fieldType(control);
+  const customKind = customControlInfo(control).kind;
   const fallback = `field-${index + 1}`;
   const key = candidates.length ? `${candidates[0][0]}:${candidates[0][1]}` : fallback;
   const options = type === "select"
@@ -61,9 +75,10 @@ export function describeResumeField(control, index = 0) {
     aliases: candidates.map(([kind, value]) => `${kind}:${value}`),
     label: label || text(control.getAttribute?.("aria-label")) || text(control.getAttribute?.("placeholder")),
     type,
+    customKind,
     required: Boolean(control.required),
     options,
-    blocked: isBlocked(control, { key, label, type }),
+    blocked: isBlocked(control, { key, label, type, customKind }),
   };
 }
 
@@ -122,6 +137,23 @@ function dispatchFrameworkEvents(control) {
   control.dispatchEvent(new EventCtor("blur", { bubbles: true, composed: true }));
 }
 
+function isVisible(element) {
+  if (!element || element.hidden || element.getAttribute?.("aria-hidden") === "true") return false;
+  const style = element.ownerDocument?.defaultView?.getComputedStyle?.(element);
+  return !style || (style.display !== "none" && style.visibility !== "hidden");
+}
+
+function clickCustomChoice(control, rawValue) {
+  const { host } = customControlInfo(control);
+  (host || control).click?.();
+  const wanted = normalizeFieldToken(rawValue);
+  const choices = Array.from(control.ownerDocument?.querySelectorAll?.(OPTION_SELECTOR) || []);
+  const choice = choices.find((item) => isVisible(item) && normalizeFieldToken(item.textContent || item.getAttribute?.("aria-label")) === wanted);
+  if (!choice) return false;
+  choice.click?.();
+  return true;
+}
+
 function setNativeValue(control, property, value) {
   let prototype = Object.getPrototypeOf(control);
   while (prototype) {
@@ -137,6 +169,10 @@ function setNativeValue(control, property, value) {
 
 function applyValue(control, descriptor, rawValue) {
   if (isBlocked(control, descriptor)) return false;
+  if (descriptor.customKind === "custom-select" && clickCustomChoice(control, rawValue)) {
+    dispatchFrameworkEvents(control);
+    return true;
+  }
   let value = rawValue;
   if (descriptor.type === "checkbox") {
     const normalized = normalizeFieldToken(value);

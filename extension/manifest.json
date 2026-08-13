@@ -6,7 +6,7 @@
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://api.deepseek.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"],
   "background": { "service_worker": "src/background.js", "type": "module" },
-  "web_accessible_resources": [{ "resources": ["src/resume-fields.js"], "matches": ["<all_urls>"] }],
+  "web_accessible_resources": [{ "resources": ["src/resume-fields.js", "resume-data/resume-profile.json"], "matches": ["<all_urls>"] }],
   "action": {
     "default_popup": "popup.html",
     "default_title": "采集投递草稿"

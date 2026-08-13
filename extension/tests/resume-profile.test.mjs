@@ -5,7 +5,7 @@ import { createChromeResumeStore, normalizeResumeFields } from '../resume-ui/res
 test('resume fields are normalized without supplying sensitive defaults', () => {
   assert.deepEqual(normalizeResumeFields(null), []);
   const fields = normalizeResumeFields([{ id: 'a', key: '  姓名 ', value: '示例值' }, { key: '', value: '' }]);
-  assert.deepEqual(fields, [{ id: 'a', key: '姓名', value: '示例值' }]);
+  assert.deepEqual(fields, [{ id: 'a', key: '姓名', value: '示例值', source: '网页或已保存资料', type: '文本' }]);
 });
 
 test('resume store persists and restores editable key-value fields', async () => {
@@ -13,7 +13,7 @@ test('resume store persists and restores editable key-value fields', async () =>
   const area = { async get(key) { return { [key]: state[key] }; }, async set(value) { Object.assign(state, value); } };
   const store = createChromeResumeStore(area);
   await store.save([{ id: 'field-1', key: '教育经历', value: '示例内容' }]);
-  assert.deepEqual(await store.load(), [{ id: 'field-1', key: '教育经历', value: '示例内容' }]);
+  assert.deepEqual(await store.load(), [{ id: 'field-1', key: '教育经历', value: '示例内容', source: '网页或已保存资料', type: '文本' }]);
 });
 
 test('resume store rejects unavailable browser storage', () => {

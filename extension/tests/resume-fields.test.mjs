@@ -73,3 +73,23 @@ test("select labels resolve to option values and false-like checkbox text stays 
   assert.equal(consent.checked, false);
   assert.deepEqual(result.filled, ["name:degree", "name:consent"]);
 });
+
+test("readonly Element-style combobox is extracted and fills by clicking visible option", () => {
+  const option = new Control({ tagName: "LI", textContent: "中国", clicked: false });
+  option.click = () => { option.clicked = true; };
+  const host = new Control({ tagName: "DIV", className: "el-select", clicked: false });
+  host.click = () => { host.clicked = true; };
+  const nationality = new Control({ name: "nationality", readOnly: true, attributes: { role: "combobox" } });
+  nationality.closest = () => host;
+  const documentLike = doc([nationality]);
+  documentLike.querySelectorAll = (selector) => selector.includes("input") ? [nationality] : [option];
+  nationality.ownerDocument = documentLike;
+  documentLike.defaultView = { Event: FakeEvent, getComputedStyle: () => ({ display: "block", visibility: "visible" }) };
+  const descriptor = describeResumeField(nationality);
+  assert.equal(descriptor.customKind, "custom-select");
+  assert.equal(descriptor.blocked, false);
+  const result = fillResumeFields({ documentLike, plan: [{ fieldKey: "name:nationality", value: "中国" }], userInitiated: true });
+  assert.equal(host.clicked, true);
+  assert.equal(option.clicked, true);
+  assert.deepEqual(result.filled, ["name:nationality"]);
+});

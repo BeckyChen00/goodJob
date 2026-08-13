@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "updatedAt": "2026-08-13T00:00:00.000Z",
+  "fields": [
+    { "key": "personal.name", "label": "姓名", "value": "" },
+    { "key": "personal.gender", "label": "性别", "value": "" },
+    { "key": "personal.nationality", "label": "国籍", "value": "" },
+    { "key": "personal.ethnicity", "label": "民族", "value": "" },
+    { "key": "personal.birthDate", "label": "出生日期", "value": "" },
+    { "key": "personal.politicalStatus", "label": "政治面貌", "value": "" },
+    { "key": "personal.healthStatus", "label": "健康状况", "value": "" },
+    { "key": "personal.heightCm", "label": "身高（厘米）", "value": "" },
+    { "key": "personal.weightKg", "label": "体重（公斤）", "value": "" },
+    { "key": "identity.documentType", "label": "证件类型", "value": "" },
+    { "key": "identity.documentNumber", "label": "证件号码", "value": "" },
+    { "key": "contact.mobile", "label": "手机号码", "value": "" },
+    { "key": "contact.email", "label": "电子邮箱", "value": "" },
+    { "key": "contact.address", "label": "现居住地址", "value": "" },
+    { "key": "contact.postalCode", "label": "邮政编码", "value": "" },
+    { "key": "education.highestDegree", "label": "最高学历", "value": "" },
+    { "key": "education.school", "label": "毕业院校", "value": "" },
+    { "key": "education.major", "label": "专业", "value": "" },
+    { "key": "education.startDate", "label": "入学时间", "value": "" },
+    { "key": "education.graduationDate", "label": "毕业时间", "value": "" },
+    { "key": "education.studyMode", "label": "学习形式", "value": "" },
+    { "key": "job.targetPosition", "label": "期望职位", "value": "" },
+    { "key": "job.targetCity", "label": "期望工作地点", "value": "" },
+    { "key": "job.availableDate", "label": "可到岗日期", "value": "" },
+    { "key": "job.expectedSalary", "label": "期望薪资", "value": "" },
+    { "key": "profile.selfEvaluation", "label": "自我评价", "value": "" }
+  ]
+}
