@@ -5,6 +5,7 @@
   "description": "使用 AI 读取招聘页面，确认后添加到本地求职投递台。",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://api.deepseek.com/*", "http://localhost:3000/*", "http://127.0.0.1:3000/*"],
+  "background": { "service_worker": "src/background.js", "type": "module" },
   "action": {
     "default_popup": "popup.html",
     "default_title": "采集投递草稿"

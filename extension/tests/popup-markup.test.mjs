@@ -14,7 +14,7 @@ async function assertAssets(root, label) {
 
   const html = await readFile(new URL("popup.html", root), "utf8");
   assert.ok(!damagedPatterns.some((pattern) => pattern.test(html)), `${label} popup has no damaged patterns`);
-  for (const id of ["capture-form", "feedback", "queue", "ai-fill", "open-settings", "settings-dialog", "settings-form"]) {
+  for (const id of ["capture-form", "feedback", "queue", "ai-fill", "open-settings", "settings-dialog", "settings-form", "success-dialog", "close-success"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `${label} has #${id}`);
   }
   for (const tag of ["title", "h1", "form", "fieldset", "label", "button", "section", "script", "dialog", "select"]) {

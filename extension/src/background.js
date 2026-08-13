@@ -1,0 +1,3 @@
+/* global chrome */
+import{fillWithAi}from'./ai.js';import{loadSettings,savePageTask}from'./storage.js';
+chrome.runtime.onMessage.addListener((message,_sender,sendResponse)=>{if(message?.type!=='START_AI_FILL')return false;const url=String(message.pageContext?.url||'');savePageTask(url,{status:'processing',startedAt:new Date().toISOString()}).then(async()=>{try{const values=await fillWithAi({settings:await loadSettings(),pageContext:message.pageContext});await savePageTask(url,{status:'completed',values,completedAt:new Date().toISOString()});}catch(error){await savePageTask(url,{status:'failed',message:error?.message||'AI 填写失败，请重试。',completedAt:new Date().toISOString()});}}).finally(()=>sendResponse({accepted:true}));return true;});
