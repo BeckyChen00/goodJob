@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Company, Job, deleteCompany, deleteJob, exportData, importData, listCompanies, listJobs, saveCompany, saveJob } from "./storage";
+import { ApplicationsDashboard } from "./components/jobs/ApplicationsDashboard";
 
 const industries = ["全部", "能源电力", "通信", "金融", "建筑基建", "军工/航天/核工业", "综合产业", "北京市属重点国企", "基建/重工", "互联网民营企业"];
 const ownerships = ["央企", "北京市属国企", "其他国企", "互联网民营企业", "其他民营企业"];
@@ -46,6 +47,7 @@ export default function Home() {
   return <main>
     <header className="topbar"><div className="brand"><span className="mark">投</span><div><strong>求职投递台</strong><small>本地数据 · 仅存于此浏览器</small></div></div><div className="header-actions"><button className="secondary" onClick={backup}>导出备份</button><label className="secondary file">导入 JSON<input type="file" accept="application/json" onChange={e => e.target.files?.[0] && restore(e.target.files[0])}/></label><button className="primary" onClick={() => setCompanyModal("new")}>＋ 新增企业</button></div></header>
     <section className="hero"><div><p className="eyebrow">2027 届求职管理</p><h1>把每一次投递，<br/><em>稳稳地推进。</em></h1><p>统一管理企业、志愿限制、岗位 JD 与面试进度。无需登录，数据自动保存在本机。</p></div><div className="stats"><div><b>{companies.length}</b><span>目标企业</span></div><div><b>{jobs.length}</b><span>岗位记录</span></div><div><b>{activeJobs}</b><span>投递进行中</span></div></div></section>
+    <ApplicationsDashboard companies={companies} jobs={jobs} />
     <section className="workspace">
       <aside><h3>企业分类</h3><button className={`all-companies ${ownership === "全部" && industry === "全部" ? "active" : ""}`} onClick={() => { setOwnership("全部"); setIndustry("全部"); }}><span>全部企业</span><i>{companies.length}</i></button><div className="nav-divider"/>{ownerships.map(owner => { const ownerCompanies = companies.filter(c => c.ownership === owner); const ownerIndustries = Array.from(new Set(ownerCompanies.map(c => c.industry))).sort((a,b) => a.localeCompare(b,"zh-CN")); const isOpen = openOwnerships.includes(owner); return <div className="nav-group" key={owner}><button className={`nav-parent ${ownership === owner && industry === "全部" ? "active" : ""}`} onClick={() => { setOwnership(owner); setIndustry("全部"); setOpenOwnerships(isOpen ? openOwnerships.filter(x => x !== owner) : [...openOwnerships, owner]); }}><span><b className="nav-arrow">{isOpen ? "⌄" : "›"}</b>{owner}</span><i>{ownerCompanies.length}</i></button>{isOpen && <div className="nav-children">{ownerIndustries.map(item => <button key={item} className={ownership === owner && industry === item ? "active" : ""} onClick={() => { setOwnership(owner); setIndustry(item); }}><span>{item}</span><i>{ownerCompanies.filter(c => c.industry === item).length}</i></button>)}{ownerIndustries.length === 0 && <small>暂无企业</small>}</div>}</div>})}</aside>
       <div className="content"><div className="toolbar"><div className="search">⌕<input aria-label="搜索企业" placeholder="搜索企业、简称或描述…" value={query} onChange={e => setQuery(e.target.value)}/></div><span>共 {shown.length} 家企业</span></div>
