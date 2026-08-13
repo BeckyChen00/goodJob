@@ -39,8 +39,7 @@ export default function Home() {
         if (!company) { await saveCompany(candidate); company = findDuplicateCompany({ ...candidate, id: "candidate", createdAt: "", updatedAt: "" }, await listCompanies()); }
         if (!company) throw new Error("企业写入失败");
         const job = jobFromExtension(parsed, company.id);
-        const currentJobs = await listJobs();
-        if (!findDuplicateJob({ ...job, id: "candidate", createdAt: "", updatedAt: "" }, currentJobs)) await saveJob(job);
+        if (job) { const currentJobs = await listJobs(); if (!findDuplicateJob({ ...job, id: "candidate", createdAt: "", updatedAt: "" }, currentJobs)) await saveJob(job); }
         await refresh(); setExpanded(values => values.includes(company.id) ? values : [...values, company.id]); notify("插件草稿已添加");
         window.postMessage({ source: "goodjob-app", type: "IMPORT_APPLICATION_RESULT", requestId: event.data.requestId, result: { delivered: true } }, window.location.origin);
       } catch (error) { const message = error instanceof Error ? error.message : "插件草稿接收失败"; notify(message); window.postMessage({ source: "goodjob-app", type: "IMPORT_APPLICATION_RESULT", requestId: event.data.requestId, result: { delivered: false, message } }, window.location.origin); }

@@ -12,7 +12,8 @@
       <p id="feedback" role="status">正在读取当前页面…</p>
       <button id="ai-fill" class="ai" type="button">✨ AI 一键填写</button>
       <form id="capture-form">
-        <fieldset>
+        <div class="submit-mode"><label><input type="radio" name="entryMode" value="company-job" checked>企业＋岗位</label><label><input type="radio" name="entryMode" value="company-only">仅添加企业</label></div>
+        <fieldset id="job-fields">
           <legend>企业父条目</legend>
           <label>企业名称<input name="companyName" required maxlength="120"></label>
           <label>企业简称<input name="companyShortName" maxlength="60"></label>

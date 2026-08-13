@@ -14,7 +14,7 @@ async function assertAssets(root, label) {
 
   const html = await readFile(new URL("popup.html", root), "utf8");
   assert.ok(!damagedPatterns.some((pattern) => pattern.test(html)), `${label} popup has no damaged patterns`);
-  for (const id of ["capture-form", "feedback", "queue", "ai-fill", "open-settings", "settings-dialog", "settings-form", "success-dialog", "close-success"]) {
+  for (const id of ["capture-form", "feedback", "queue", "ai-fill", "open-settings", "settings-dialog", "settings-form", "success-dialog", "close-success", "job-fields"]) {
     assert.match(html, new RegExp(`id=["']${id}["']`), `${label} has #${id}`);
   }
   for (const tag of ["title", "h1", "form", "fieldset", "label", "button", "section", "script", "dialog", "select"]) {
@@ -24,8 +24,9 @@ async function assertAssets(root, label) {
       `${label} closes ${tag}`,
     );
   }
-  assert.equal((html.match(/<input\b/gi) ?? []).length, 9, `${label} has 9 inputs`);
+  assert.equal((html.match(/<input\b/gi) ?? []).length, 11, `${label} has 11 inputs`);
   assert.equal((html.match(/<textarea\b/gi) ?? []).length, 1, `${label} has 1 textarea`);
+  assert.equal((html.match(/name=["']entryMode["']/gi) ?? []).length, 2, `${label} has two entry modes`);
   assert.match(html, /<script\s+type=["']module["']\s+src=["']src\/popup\.js["']><\/script>/i, `${label} loads popup module`);
   assert.match(html, /<meta\s+charset=["']utf-8["']/i, `${label} declares UTF-8`);
 }
