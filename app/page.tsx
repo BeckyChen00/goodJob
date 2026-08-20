@@ -3,12 +3,14 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Company, Job, deleteCompany, deleteJob, exportData, importData, listCompanies, listJobs, saveCompany, saveJob } from "./storage";
 import { ApplicationsDashboard } from "./components/jobs/ApplicationsDashboard";
+import type { JobFilters as JobFilterValue } from "./domain/application-metrics";
+import { JOB_STATUSES } from "./domain/job-status";
 import { companyFromExtension, jobFromExtension, parseExtensionDraft } from "./extension-bridge";
 import { findDuplicateCompany, findDuplicateJob } from "./data/duplicates";
 
 const industries = ["全部", "能源电力", "通信", "金融", "建筑基建", "军工/航天/核工业", "综合产业", "北京市属重点国企", "基建/重工", "互联网民营企业"];
 const ownerships = ["央企", "北京市属国企", "其他国企", "互联网民营企业", "其他民营企业"];
-const statuses = ["待投递", "已投递", "测评", "笔试", "一面", "二面", "HR面", "Offer", "拒绝", "放弃"];
+const statuses = [...JOB_STATUSES];
 const emptyCompany: Omit<Company, "id" | "createdAt" | "updatedAt"> = { name: "", shortName: "", ownership: "央企", industry: "能源电力", website: "", recruitmentUrl: "", description: "", applicationLimit: null, deadline: "", notes: "" };
 const emptyJob: Omit<Job, "id" | "companyId" | "createdAt" | "updatedAt"> = { title: "", batch: "", location: "", category: "", url: "", jd: "", status: "待投递", appliedAt: "", deadline: "", progress: "", resumeName: "", notes: "" };
 type CompanyDraft = Omit<Company, "id" | "createdAt" | "updatedAt"> & Partial<Pick<Company, "id" | "createdAt" | "updatedAt">>;
@@ -17,6 +19,8 @@ type JobDraft = Omit<Job, "id" | "createdAt" | "updatedAt"> & Partial<Pick<Job, 
 export default function Home() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<readonly Job[]>([]);
+  const [jobFilters, setJobFilters] = useState<JobFilterValue>({ query: "", statuses: [], deadline: "all" });
   const [query, setQuery] = useState("");
   const [ownership, setOwnership] = useState("全部");
   const [industry, setIndustry] = useState("全部");
@@ -48,7 +52,9 @@ export default function Home() {
   }, []);
   function notify(message: string) { setToast(message); window.setTimeout(() => setToast(""), 2400); }
 
-  const shown = useMemo(() => companies.filter(c => (ownership === "全部" || c.ownership === ownership) && (industry === "全部" || c.industry === industry) && `${c.name}${c.shortName}${c.description}`.toLowerCase().includes(query.toLowerCase())), [companies, ownership, industry, query]);
+  const hasJobFilters = Boolean(jobFilters.query?.trim() || jobFilters.statuses?.length || jobFilters.deadline !== "all");
+  const filteredCompanyIds = useMemo(() => new Set(filteredJobs.map(job => job.companyId)), [filteredJobs]);
+  const shown = useMemo(() => companies.filter(c => (ownership === "全部" || c.ownership === ownership) && (industry === "全部" || c.industry === industry) && `${c.name}${c.shortName}${c.description}`.toLowerCase().includes(query.toLowerCase()) && (!hasJobFilters || filteredCompanyIds.has(c.id))), [companies, ownership, industry, query, hasJobFilters, filteredCompanyIds]);
   const activeJobs = jobs.filter(j => !["待投递", "放弃", "拒绝"].includes(j.status)).length;
 
   async function removeCompany(company: Company) {
@@ -67,11 +73,11 @@ export default function Home() {
   return <main>
     <header className="topbar"><div className="brand"><span className="mark">投</span><div><strong>求职投递台</strong><small>本地数据 · 仅存于此浏览器</small></div></div><div className="header-actions"><button className="secondary" onClick={backup}>导出备份</button><label className="secondary file">导入 JSON<input type="file" accept="application/json" onChange={e => e.target.files?.[0] && restore(e.target.files[0])}/></label><button className="primary" onClick={() => setCompanyModal("new")}>＋ 新增企业</button></div></header>
     <section className="hero"><div><p className="eyebrow">2027 届求职管理</p><h1>把每一次投递，<br/><em>稳稳地推进。</em></h1><p>统一管理企业、志愿限制、岗位 JD 与面试进度。无需登录，数据自动保存在本机。</p></div><div className="stats"><div><b>{companies.length}</b><span>目标企业</span></div><div><b>{jobs.length}</b><span>岗位记录</span></div><div><b>{activeJobs}</b><span>投递进行中</span></div></div></section>
-    <ApplicationsDashboard companies={companies} jobs={jobs} />
+    <ApplicationsDashboard companies={companies} jobs={jobs} onFiltersChange={setJobFilters} onFilteredJobsChange={setFilteredJobs} />
     <section className="workspace">
       <aside><h3>企业分类</h3><button className={`all-companies ${ownership === "全部" && industry === "全部" ? "active" : ""}`} onClick={() => { setOwnership("全部"); setIndustry("全部"); }}><span>全部企业</span><i>{companies.length}</i></button><div className="nav-divider"/>{ownerships.map(owner => { const ownerCompanies = companies.filter(c => c.ownership === owner); const ownerIndustries = Array.from(new Set(ownerCompanies.map(c => c.industry))).sort((a,b) => a.localeCompare(b,"zh-CN")); const isOpen = openOwnerships.includes(owner); return <div className="nav-group" key={owner}><button className={`nav-parent ${ownership === owner && industry === "全部" ? "active" : ""}`} onClick={() => { setOwnership(owner); setIndustry("全部"); setOpenOwnerships(isOpen ? openOwnerships.filter(x => x !== owner) : [...openOwnerships, owner]); }}><span><b className="nav-arrow">{isOpen ? "⌄" : "›"}</b>{owner}</span><i>{ownerCompanies.length}</i></button>{isOpen && <div className="nav-children">{ownerIndustries.map(item => <button key={item} className={ownership === owner && industry === item ? "active" : ""} onClick={() => { setOwnership(owner); setIndustry(item); }}><span>{item}</span><i>{ownerCompanies.filter(c => c.industry === item).length}</i></button>)}{ownerIndustries.length === 0 && <small>暂无企业</small>}</div>}</div>})}</aside>
       <div className="content"><div className="toolbar"><div className="search">⌕<input aria-label="搜索企业" placeholder="搜索企业、简称或描述…" value={query} onChange={e => setQuery(e.target.value)}/></div><span>共 {shown.length} 家企业</span></div>
-        <div className="company-list">{shown.map(company => { const ownJobs = jobs.filter(j => j.companyId === company.id); const used = ownJobs.filter(j => !["待投递", "放弃", "拒绝"].includes(j.status)).length; const isOpen = expanded.includes(company.id); return <article key={company.id} className="company-card">
+        <div className="company-list">{shown.map(company => { const allCompanyJobs = jobs.filter(j => j.companyId === company.id); const ownJobs = (hasJobFilters ? filteredJobs : jobs).filter(j => j.companyId === company.id); const used = allCompanyJobs.filter(j => !["待投递", "放弃", "拒绝"].includes(j.status)).length; const isOpen = expanded.includes(company.id); return <article key={company.id} className="company-card">
           <div className="company-row"><button className="chevron" aria-label={isOpen ? "收起岗位" : "展开岗位"} onClick={() => setExpanded(isOpen ? expanded.filter(x => x !== company.id) : [...expanded, company.id])}>{isOpen ? "⌄" : "›"}</button><div className="avatar">{company.shortName?.slice(0, 2) || company.name.slice(0, 2)}</div><div className="company-main"><div><h2>{company.name}</h2><span className={`badge ${company.ownership.includes("民营") ? "private" : "state"}`}>{company.ownership}</span></div><p>{company.description || "暂无企业描述"}</p></div><div className="meta"><span>{company.industry}</span><b>{company.applicationLimit == null ? "志愿不限/未知" : `已投 ${used} / ${company.applicationLimit}`}</b></div><div className="row-actions"><a href={company.website.startsWith("http") ? company.website : `https://${company.website}`} target="_blank" rel="noreferrer">官网 ↗</a><button onClick={() => setCompanyModal(company)}>编辑</button><button className="danger" onClick={() => removeCompany(company)}>删除</button></div></div>
           {isOpen && <div className="jobs"><div className="jobs-head"><div><b>投递岗位</b><span>{ownJobs.length} 条记录</span></div><button onClick={() => setJobModal({ companyId: company.id })}>＋ 新增岗位</button></div>{ownJobs.length === 0 ? <div className="empty">还没有岗位记录，点击右上角新增第一条。</div> : <div className="job-table"><div className="job-tr job-th"><span>岗位 / 批次</span><span>地点</span><span>状态</span><span>截止日期</span><span>简历</span><span>操作</span></div>{ownJobs.map(job => <div className="job-tr" key={job.id}><span><b>{job.title}</b><small>{job.batch || "未填写批次"}</small></span><span>{job.location || "—"}</span><span><i className={`status s-${statuses.indexOf(job.status)}`}>{job.status}</i></span><span>{job.deadline || "—"}</span><span>{job.resumeName || "—"}</span><span className="job-actions">{job.url && <a target="_blank" rel="noreferrer" href={job.url}>JD ↗</a>}<button onClick={() => setJobModal({ companyId: company.id, job })}>编辑</button><button onClick={async () => { if (confirm("删除该岗位记录？")) { await deleteJob(job.id); refresh(); } }}>删除</button></span></div>)}</div>}</div>}
         </article>})}{shown.length === 0 && <div className="no-result">没有找到匹配的企业。</div>}</div>

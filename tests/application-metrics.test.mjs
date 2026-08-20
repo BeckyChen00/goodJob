@@ -17,6 +17,20 @@ test("关键词匹配岗位名称、地点和批次", () => {
   assert.deepEqual(filterJobs(jobs, { query: "补录" }).map((item) => item.id), ["batch"]);
 });
 
+test("筛选结果保留原岗位对象和企业关联，供正式父子列表直接复用", () => {
+  const first = job({ id: "first", companyId: "company-a", status: "笔试" });
+  const second = job({ id: "second", companyId: "company-b", status: "待投递" });
+  const result = filterJobs([first, second], { statuses: ["笔试"] });
+  assert.deepEqual(result.map((item) => item.companyId), ["company-a"]);
+  assert.equal(result[0], first);
+});
+
+test("任一条件无匹配时返回空集合，清空条件后恢复全部岗位", () => {
+  const jobs = [job({ id: "a" }), job({ id: "b", companyId: "company-b" })];
+  assert.deepEqual(filterJobs(jobs, { query: "不存在的岗位" }), []);
+  assert.deepEqual(filterJobs(jobs, { query: "", statuses: [], deadline: "all" }), jobs);
+});
+
 test("四类状态统计互斥且总数不丢失", () => {
   assert.deepEqual(calculateApplicationMetrics([job(), job({ status: "笔试" }), job({ status: "Offer" }), job({ status: "拒绝" }), job({ status: "放弃" })]), { pending: 1, active: 1, offer: 1, ended: 2, total: 5 });
 });
