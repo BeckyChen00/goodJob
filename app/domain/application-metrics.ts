@@ -1,14 +1,12 @@
-import type { Company, Job } from "../storage";
+import type { Job } from "../storage";
 
 export const APPLICATION_STATUSES = ["待投递", "已投递", "测评", "笔试", "一面", "二面", "HR面", "Offer", "拒绝", "放弃"] as const;
 export type ApplicationBucket = "pending" | "active" | "offer" | "ended";
 export type DeadlineWindow = "all" | "overdue" | "within7" | "within30";
 export interface JobFilters { query?: string; statuses?: readonly string[]; deadline?: DeadlineWindow }
 export interface ApplicationMetrics { pending: number; active: number; offer: number; ended: number; total: number }
-export interface ApplicationLimitState { used: number; limit: number | null; level: "none" | "available" | "reached" | "exceeded"; remaining: number | null }
 
 const ENDED_STATUSES = new Set(["拒绝", "放弃"]);
-const UNCOUNTED_STATUSES = new Set(["待投递", "拒绝", "放弃"]);
 
 export function applicationBucket(status: string): ApplicationBucket {
   if (status === "待投递") return "pending";
@@ -16,7 +14,6 @@ export function applicationBucket(status: string): ApplicationBucket {
   if (ENDED_STATUSES.has(status)) return "ended";
   return "active";
 }
-
 export function calculateApplicationMetrics(jobs: readonly Job[]): ApplicationMetrics {
   const result: ApplicationMetrics = { pending: 0, active: 0, offer: 0, ended: 0, total: jobs.length };
   for (const job of jobs) result[applicationBucket(job.status)] += 1;
@@ -55,14 +52,4 @@ export function filterJobs(jobs: readonly Job[], filters: JobFilters, today = ne
   return jobs.filter((job) => `${job.title} ${job.location} ${job.batch}`.toLocaleLowerCase("zh-CN").includes(query)
     && (!statuses.length || statuses.includes(job.status))
     && matchesDeadlineWindow(job.deadline, deadline, today));
-}
-
-export function applicationLimitState(company: Pick<Company, "applicationLimit">, jobs: readonly Job[]): ApplicationLimitState {
-  const used = jobs.filter((job) => !UNCOUNTED_STATUSES.has(job.status)).length;
-  const limit = company.applicationLimit;
-  if (limit === null) return { used, limit, level: "none", remaining: null };
-  const remaining = Math.max(limit - used, 0);
-  if (used > limit) return { used, limit, level: "exceeded", remaining };
-  if (used === limit) return { used, limit, level: "reached", remaining };
-  return { used, limit, level: "available", remaining };
 }

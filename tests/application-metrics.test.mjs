@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applicationLimitState, calculateApplicationMetrics, calendarDaysUntil, filterJobs, matchesDeadlineWindow, parseLocalDate } from "../app/domain/application-metrics.ts";
+import { calculateApplicationMetrics, calendarDaysUntil, filterJobs, matchesDeadlineWindow, parseLocalDate } from "../app/domain/application-metrics.ts";
 
 const job = (overrides = {}) => ({ id: "job", companyId: "company", title: "后端工程师", batch: "2027 秋招", location: "北京", category: "研发", url: "", jd: "", status: "待投递", appliedAt: "", deadline: "", progress: "", resumeName: "", notes: "", createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "2026-08-01T00:00:00.000Z", ...overrides });
 
@@ -16,7 +16,6 @@ test("关键词匹配岗位名称、地点和批次", () => {
   assert.deepEqual(filterJobs(jobs, { query: " 深圳 " }).map((item) => item.id), ["location"]);
   assert.deepEqual(filterJobs(jobs, { query: "补录" }).map((item) => item.id), ["batch"]);
 });
-
 test("筛选结果保留原岗位对象和企业关联，供正式父子列表直接复用", () => {
   const first = job({ id: "first", companyId: "company-a", status: "笔试" });
   const second = job({ id: "second", companyId: "company-b", status: "待投递" });
@@ -47,14 +46,4 @@ test("空日期和非法日历日期不进入截止提醒", () => {
   assert.equal(parseLocalDate("2026-02-30"), null);
   assert.equal(matchesDeadlineWindow("", "overdue"), false);
   assert.equal(matchesDeadlineWindow("", "all"), true);
-});
-
-test("志愿限制覆盖无上限、零、未达到、达到和超过", () => {
-  const active = job({ status: "已投递" });
-  assert.equal(applicationLimitState({ applicationLimit: null }, [active]).level, "none");
-  assert.equal(applicationLimitState({ applicationLimit: 0 }, []).level, "reached");
-  assert.equal(applicationLimitState({ applicationLimit: 2 }, [active]).level, "available");
-  assert.equal(applicationLimitState({ applicationLimit: 1 }, [active]).level, "reached");
-  assert.equal(applicationLimitState({ applicationLimit: 0 }, [active]).level, "exceeded");
-  assert.equal(applicationLimitState({ applicationLimit: 0 }, [job({ status: "待投递" })]).used, 0);
 });

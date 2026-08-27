@@ -29,11 +29,12 @@ test("server renders the job application tracker shell", async () => {
 });
 
 test("product source retains the parent-child and local-data workflows", async () => {
-  const [page, storage, layout, packageJson] = await Promise.all([
+  const [page, storage, layout, packageJson, styles] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /const ownerships = \["央企"/);
@@ -42,6 +43,12 @@ test("product source retains the parent-child and local-data workflows", async (
   assert.match(page, /JobDialog/);
   assert.match(page, /exportData/);
   assert.match(page, /importData/);
+  assert.match(page, /岗位限制：/);
+  assert.match(page, /志愿排序/);
+  assert.match(page, /第 \$\{job\.preferenceOrder\} 志愿/);
+  assert.doesNotMatch(page, /const used = allCompanyJobs/);
+  assert.match(styles, /grid-template-columns:1\.5fr \.7fr \.7fr \.7fr \.8fr 1fr 1fr/);
+  assert.match(styles, /overflow-wrap:anywhere/);
   assert.match(storage, /job-application-tracker/);
   assert.match(storage, /createObjectStore\("companies"/);
   assert.match(storage, /createObjectStore\("jobs"/);
