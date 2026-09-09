@@ -1,1 +1,38 @@
-import{cp,mkdir,rm}from'node:fs/promises';import{dirname,resolve}from'node:path';import{fileURLToPath}from'node:url';const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),dist=resolve(root,'dist');await rm(dist,{recursive:true,force:true});await mkdir(resolve(dist,'src'),{recursive:true});await mkdir(resolve(dist,'resume-ui'),{recursive:true});await mkdir(resolve(dist,'resume-data'),{recursive:true});for(const file of['manifest.json','popup.html','popup.css'])await cp(resolve(root,file),resolve(dist,file));for(const file of['ai.js','background.js','content.js','domain.js','job-status.js','popup.js','resume-fields.js','resume-repository.js','resume-schema.js','storage.js','sync.js'])await cp(resolve(root,'src',file),resolve(dist,'src',file));await cp(resolve(root,'resume-ui','resume-profile.js'),resolve(dist,'resume-ui','resume-profile.js'));await cp(resolve(root,'resume-data','resume-profile.json'),resolve(dist,'resume-data','resume-profile.json'));await cp(resolve(root,'resume-data','README.md'),resolve(dist,'resume-data','README.md'));console.log(`Extension built at ${dist}`);
+import { cp, mkdir, rm } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const dist = resolve(root, "dist");
+
+await rm(dist, { recursive: true, force: true });
+await mkdir(resolve(dist, "src"), { recursive: true });
+await mkdir(resolve(dist, "resume-ui"), { recursive: true });
+await mkdir(resolve(dist, "resume-data"), { recursive: true });
+
+for (const file of ["manifest.json", "popup.html", "popup.css", "drawer.css"]) {
+  await cp(resolve(root, file), resolve(dist, file));
+}
+
+for (const file of [
+  "ai.js",
+  "background.js",
+  "content.js",
+  "drawer.js",
+  "domain.js",
+  "job-fit.js",
+  "job-status.js",
+  "popup.js",
+  "resume-fields.js",
+  "resume-repository.js",
+  "resume-schema.js",
+  "storage.js",
+  "sync.js",
+]) {
+  await cp(resolve(root, "src", file), resolve(dist, "src", file));
+}
+
+await cp(resolve(root, "resume-ui", "resume-profile.js"), resolve(dist, "resume-ui", "resume-profile.js"));
+await cp(resolve(root, "resume-data", "resume-profile.json"), resolve(dist, "resume-data", "resume-profile.json"));
+await cp(resolve(root, "resume-data", "README.md"), resolve(dist, "resume-data", "README.md"));
+console.log(`Extension built at ${dist}`);

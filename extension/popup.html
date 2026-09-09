@@ -5,15 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>采集投递草稿</title>
     <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="drawer.css">
   </head>
   <body>
     <main>
-      <div class="title-row"><h1>采集投递草稿</h1><button id="open-settings" type="button">设置</button></div>
-      <p id="feedback" role="status">正在读取当前页面…</p>
+      <div class="title-row">
+        <h1>采集投递草稿</h1>
+        <div class="title-actions">
+          <button id="open-settings" type="button">设置</button>
+          <button id="close-drawer" type="button" aria-label="关闭侧边栏">×</button>
+        </div>
+      </div>
+      <p id="feedback" role="status">正在读取当前页面...</p>
       <button id="maintain-resume" class="resume" type="button">维护简历信息</button>
-      <button id="ai-fill" class="ai" type="button">✨ AI 一键填写</button>
+      <button id="job-fit" class="fit" type="button">岗位匹配</button>
+      <button id="ai-fill" class="ai" type="button">AI 一键填写</button>
       <form id="capture-form">
-        <div class="submit-mode"><label><input type="radio" name="entryMode" value="company-job" checked>企业＋岗位</label><label><input type="radio" name="entryMode" value="company-only">仅添加企业</label></div>
+        <div class="submit-mode">
+          <label><input type="radio" name="entryMode" value="company-job" checked>企业+岗位</label>
+          <label><input type="radio" name="entryMode" value="company-only">仅添加企业</label>
+        </div>
         <fieldset id="company-fields">
           <legend>企业父条目</legend>
           <label>企业名称<input name="companyName" required maxlength="120"></label>
@@ -22,7 +33,21 @@
         </fieldset>
         <fieldset id="job-fields">
           <legend>岗位子条目</legend>
-          <label>投递状态<select name="jobStatus"><option value="待投递" selected>待投递</option><option value="已投递">已投递</option><option value="测评">测评</option><option value="笔试">笔试</option><option value="一面">一面</option><option value="二面">二面</option><option value="HR面">HR面</option><option value="Offer">Offer</option><option value="拒绝">拒绝</option><option value="放弃">放弃</option></select></label>
+          <label>
+            投递状态
+            <select name="jobStatus">
+              <option value="待投递" selected>待投递</option>
+              <option value="已投递">已投递</option>
+              <option value="测评">测评</option>
+              <option value="笔试">笔试</option>
+              <option value="一面">一面</option>
+              <option value="二面">二面</option>
+              <option value="HR面">HR面</option>
+              <option value="Offer">Offer</option>
+              <option value="拒绝">拒绝</option>
+              <option value="放弃">放弃</option>
+            </select>
+          </label>
           <label>岗位名称<input name="jobTitle" required maxlength="160"></label>
           <label>地点<input name="location" maxlength="100"></label>
           <label>批次<input name="batch" maxlength="100"></label>
@@ -33,19 +58,38 @@
       </form>
       <section>
         <h2>发送失败的草稿</h2>
-        <ul id="queue"><li class="empty">正在读取…</li></ul>
+        <ul id="queue"><li class="empty">正在读取...</li></ul>
       </section>
       <dialog id="settings-dialog">
         <form id="settings-form" method="dialog">
           <h2>AI 设置</h2>
           <label>开发商<select name="provider"><option value="deepseek">DeepSeek</option></select></label>
-          <label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="sk-…" required></label>
+          <label>API Key<input name="apiKey" type="password" autocomplete="off" placeholder="sk-..." required></label>
           <label>模型<input name="model" value="deepseek-chat" required maxlength="100"></label>
-          <p class="hint">密钥只保存在此浏览器的扩展本地存储中，不会写入项目。</p>
-          <div class="dialog-actions"><button type="button" id="cancel-settings">取消</button><button class="primary">保存设置</button></div>
+          <p class="hint">密钥只保存在此浏览器扩展的本地存储中，不会写入项目。</p>
+          <div class="dialog-actions">
+            <button type="button" id="cancel-settings">取消</button>
+            <button class="primary">保存设置</button>
+          </div>
         </form>
       </dialog>
-      <dialog id="success-dialog"><div class="success-mark">✓</div><h2>已提交</h2><p>企业和岗位信息已添加到求职投递台。</p><button id="close-success" class="primary" type="button">知道了</button></dialog>
+      <dialog id="job-fit-dialog">
+        <form method="dialog">
+          <h2>岗位匹配结果</h2>
+          <p class="hint">本功能会调用本机 http://127.0.0.1:8765/job-fit 构造 prompt 和选择简历路由，再由浏览器直接流式调用 LLM。</p>
+          <textarea id="job-fit-command" readonly rows="8"></textarea>
+          <div class="dialog-actions">
+            <button type="button" id="copy-job-fit">复制结果</button>
+            <button class="primary">关闭</button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="success-dialog">
+        <div class="success-mark">✓</div>
+        <h2>已提交</h2>
+        <p>企业和岗位信息已添加到求职投递台。</p>
+        <button id="close-success" class="primary" type="button">知道了</button>
+      </dialog>
     </main>
     <script type="module" src="src/popup.js"></script>
   </body>

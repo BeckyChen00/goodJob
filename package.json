@@ -12,6 +12,7 @@
     "test": "npm run build && node --test tests/rendered-html.test.mjs tests/application-metrics.test.mjs tests/job-status.test.mjs tests/extension-bridge.test.mjs tests/data/*.test.mjs extension/tests/*.test.mjs",
     "test:unit": "node --test tests/application-metrics.test.mjs tests/job-status.test.mjs tests/extension-bridge.test.mjs tests/data/*.test.mjs extension/tests/*.test.mjs",
     "build:extension": "node extension/scripts/build.mjs",
+    "job-fit-server": "node scripts/job-fit-server.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },

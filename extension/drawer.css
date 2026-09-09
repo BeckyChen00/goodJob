@@ -1,0 +1,22 @@
+html[data-mode="drawer"],
+html[data-mode="drawer"] body {
+  width: 100%;
+  min-height: 100%;
+  background: #f5f7fb;
+}
+
+html[data-mode="drawer"] body {
+  max-height: none;
+  min-height: 100vh;
+}
+
+.title-actions {
+  display: flex;
+  gap: 6px;
+}
+
+#close-drawer {
+  padding: 4px 9px;
+  font-size: 20px;
+  line-height: 1;
+}

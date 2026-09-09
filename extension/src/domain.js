@@ -1,9 +1,103 @@
-import{normalizeJobStatus}from'./job-status.js';export const MAX_PAGE_URL_LENGTH=4096;
-export function normalizeDomain(value){const raw=String(value??'').trim();if(!raw)return'';try{const url=new URL(raw.includes('://')?raw:`https://${raw}`);return url.hostname.toLowerCase().replace(/^www\./,'').replace(/\.$/,'');}catch{return raw.toLowerCase().replace(/^www\./,'').replace(/\/$/,'');}}
-export function normalizeText(value){return String(value??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');}
-export function matchCompanyCandidate(candidate,companies){const domain=normalizeDomain(candidate.domain||candidate.website);if(domain){const found=companies.find(c=>[c.domain,c.website].some(v=>normalizeDomain(v)===domain));if(found)return{company:found,reason:'domain'};}const names=new Set([candidate.name,candidate.shortName].map(normalizeText).filter(Boolean));if(!names.size)return null;const found=companies.find(c=>[c.name,c.shortName].map(normalizeText).some(n=>names.has(n)));return found?{company:found,reason:'name'}:null;}
-export function classifyPageContext(input){const url=String(input?.url??'').trim(),title=String(input?.title??'').trim();if(!url)return{ok:false,message:'无法读取当前页面地址，请手动填写岗位链接。'};if(url.length>MAX_PAGE_URL_LENGTH)return{ok:false,message:`页面地址超过 ${MAX_PAGE_URL_LENGTH} 个字符，请手动填写较短链接。`};let parsed;try{parsed=new URL(url);}catch{return{ok:false,message:'当前页面地址无效，请手动填写岗位链接。'};}if(!['http:','https:'].includes(parsed.protocol))return{ok:false,message:'浏览器内部或受限页面无法采集，请在普通 HTTP/HTTPS 页面使用。'};return{ok:true,context:{url:parsed.href,title,domain:normalizeDomain(parsed.hostname)},warning:title?'':'页面标题为空，请手动填写岗位名称。'};}
-export function createDraft(input,now=new Date()){const companyName=String(input.companyName??'').trim(),mode=input.entryMode==='company-only'?'company-only':'company-job',jobTitle=String(input.jobTitle??'').trim();if(!companyName)throw new Error('请填写企业名称。');if(mode==='company-job'&&!jobTitle)throw new Error('请填写岗位名称，或选择“仅添加企业”。');const sourceUrl=String(input.sourceUrl??'').trim();return{id:globalThis.crypto?.randomUUID?.()??`draft-${now.getTime()}-${Math.random().toString(16).slice(2)}`,entryMode:mode,fingerprint:[mode,normalizeDomain(input.domain||input.companyWebsite||sourceUrl),normalizeText(companyName),normalizeText(jobTitle),sourceUrl.toLowerCase()].join('|'),status:'pending',attemptCount:0,createdAt:now.toISOString(),updatedAt:now.toISOString(),source:{url:sourceUrl,title:String(input.pageTitle??input.title??'').trim(),domain:normalizeDomain(input.domain||sourceUrl)},company:{name:companyName,shortName:String(input.companyShortName??'').trim(),website:String(input.companyWebsite??'').trim()},job:mode==='company-job'?{title:jobTitle,location:String(input.location??'').trim(),batch:String(input.batch??'').trim(),url:sourceUrl,notes:String(input.notes??'').trim(),status:normalizeJobStatus(input.jobStatus)}:null};}
-export function upsertDraft(queue,draft){const i=queue.findIndex(x=>x.fingerprint===draft.fingerprint);return i<0?[...queue,draft]:queue.map((x,n)=>n===i?{...draft,id:x.id,createdAt:x.createdAt}:x);}
-export function retryDraft(queue,id,now=new Date()){return queue.map(x=>x.id===id?{...x,status:'pending',attemptCount:x.attemptCount+1,updatedAt:now.toISOString()}:x);}
-export function deleteDraft(queue,id){return queue.filter(x=>x.id!==id);}
+import { normalizeJobStatus } from "./job-status.js";
+
+export const MAX_PAGE_URL_LENGTH = 4096;
+
+export function normalizeDomain(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    return url.hostname.toLowerCase().replace(/^www\./, "").replace(/\.$/, "");
+  } catch {
+    return raw.toLowerCase().replace(/^www\./, "").replace(/\/$/, "");
+  }
+}
+
+export function normalizeText(value) {
+  return String(value ?? "").trim().toLocaleLowerCase().replace(/\s+/g, " ");
+}
+
+export function matchCompanyCandidate(candidate, companies) {
+  const domain = normalizeDomain(candidate.domain || candidate.website);
+  if (domain) {
+    const found = companies.find((company) => [company.domain, company.website].some((item) => normalizeDomain(item) === domain));
+    if (found) return { company: found, reason: "domain" };
+  }
+  const names = new Set([candidate.name, candidate.shortName].map(normalizeText).filter(Boolean));
+  if (!names.size) return null;
+  const found = companies.find((company) => [company.name, company.shortName].map(normalizeText).some((name) => names.has(name)));
+  return found ? { company: found, reason: "name" } : null;
+}
+
+export function classifyPageContext(input) {
+  const url = String(input?.url ?? "").trim();
+  const title = String(input?.title ?? "").trim();
+  if (!url) return { ok: false, message: "无法读取当前页面地址，请手动填写岗位链接。" };
+  if (url.length > MAX_PAGE_URL_LENGTH) {
+    return { ok: false, message: `页面地址超过 ${MAX_PAGE_URL_LENGTH} 个字符，请手动填写较短链接。` };
+  }
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { ok: false, message: "当前页面地址无效，请手动填写岗位链接。" };
+  }
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    return { ok: false, message: "浏览器内部或受限页面无法采集，请在普通 HTTP/HTTPS 页面使用。" };
+  }
+  return {
+    ok: true,
+    context: {
+      url: parsed.href,
+      title,
+      domain: normalizeDomain(parsed.hostname),
+      html: String(input?.html ?? ""),
+      text: String(input?.text ?? ""),
+    },
+    warning: title ? "" : "页面标题为空，请手动填写岗位名称。",
+  };
+}
+
+export function createDraft(input, now = new Date()) {
+  const companyName = String(input.companyName ?? "").trim();
+  const mode = input.entryMode === "company-only" ? "company-only" : "company-job";
+  const jobTitle = String(input.jobTitle ?? "").trim();
+  if (!companyName) throw new Error("请填写企业名称。");
+  if (mode === "company-job" && !jobTitle) throw new Error("请填写岗位名称，或选择“仅添加企业”。");
+  const sourceUrl = String(input.sourceUrl ?? "").trim();
+  return {
+    id: globalThis.crypto?.randomUUID?.() ?? `draft-${now.getTime()}-${Math.random().toString(16).slice(2)}`,
+    entryMode: mode,
+    fingerprint: [mode, normalizeDomain(input.domain || input.companyWebsite || sourceUrl), normalizeText(companyName), normalizeText(jobTitle), sourceUrl.toLowerCase()].join("|"),
+    status: "pending",
+    attemptCount: 0,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+    source: { url: sourceUrl, title: String(input.pageTitle ?? input.title ?? "").trim(), domain: normalizeDomain(input.domain || sourceUrl) },
+    company: { name: companyName, shortName: String(input.companyShortName ?? "").trim(), website: String(input.companyWebsite ?? "").trim() },
+    job: mode === "company-job"
+      ? {
+        title: jobTitle,
+        location: String(input.location ?? "").trim(),
+        batch: String(input.batch ?? "").trim(),
+        url: sourceUrl,
+        notes: String(input.notes ?? "").trim(),
+        status: normalizeJobStatus(input.jobStatus),
+        preferenceOrder: null,
+      }
+      : null,
+  };
+}
+
+export function upsertDraft(queue, draft) {
+  const index = queue.findIndex((item) => item.fingerprint === draft.fingerprint);
+  return index < 0 ? [...queue, draft] : queue.map((item, current) => (current === index ? { ...draft, id: item.id, createdAt: item.createdAt } : item));
+}
+
+export function retryDraft(queue, id, now = new Date()) {
+  return queue.map((item) => (item.id === id ? { ...item, status: "pending", attemptCount: item.attemptCount + 1, updatedAt: now.toISOString() } : item));
+}
+
+export function deleteDraft(queue, id) {
+  return queue.filter((item) => item.id !== id);
+}
